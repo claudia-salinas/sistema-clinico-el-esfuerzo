@@ -4,4 +4,4 @@ Software multiparadigma en Python para la gestión de historiales clínicos del 
 
 Versión actual: prototipo de la Evaluación Parcial.
 
-Ejecutar con: python sistema_clinico.py
+Ejecutar con: python main.py (requiere Python 3.10 o superior) 
