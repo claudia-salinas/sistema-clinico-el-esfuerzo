@@ -6,6 +6,8 @@ mediante propiedades o métodos controlados.
 """
 from datetime import date, datetime
 
+from seguridad import cifrar, descifrar, enmascarar_dni
+
 
 def leer_fecha(texto):
     """Convierte un texto con formato dd/mm/aaaa en un objeto date."""
@@ -26,9 +28,10 @@ class Atencion:
             raise ValueError("El diagnóstico y el tratamiento son obligatorios.")
         # Si no se indica la fecha, se usa la de hoy
         self.__fecha = fecha if fecha is not None else date.today()
-        self.__diagnostico = diagnostico.strip()
-        self.__tratamiento = tratamiento.strip()
-        self.__notas = notas.strip()
+        # Los datos clínicos se guardan cifrados (RNF-01)
+        self.__diagnostico = cifrar(diagnostico.strip())
+        self.__tratamiento = cifrar(tratamiento.strip())
+        self.__notas = cifrar(notas.strip())
         self.__documentos = []
 
     @property
@@ -37,7 +40,7 @@ class Atencion:
 
     @property
     def diagnostico(self):
-        return self.__diagnostico
+        return descifrar(self.__diagnostico)
 
     @property
     def documentos(self):
@@ -51,11 +54,12 @@ class Atencion:
         self.__documentos.append(nombre_archivo.strip())
 
     def mostrar(self):
+        notas = descifrar(self.__notas)
         texto = (f"{self.__fecha.strftime('%d/%m/%Y')} | "
-                 f"Diagnóstico: {self.__diagnostico} | "
-                 f"Tratamiento: {self.__tratamiento}")
-        if self.__notas:
-            texto += f" | Notas: {self.__notas}"
+                 f"Diagnóstico: {descifrar(self.__diagnostico)} | "
+                 f"Tratamiento: {descifrar(self.__tratamiento)}")
+        if notas:
+            texto += f" | Notas: {notas}"
         if self.__documentos:
             texto += " | Documentos: " + ", ".join(self.__documentos)
         return texto
@@ -95,22 +99,23 @@ class Paciente:
             raise ValueError("Los nombres y apellidos son obligatorios.")
         if not (telefono.isdigit() and len(telefono) == 9):
             raise ValueError("El teléfono debe tener 9 dígitos numéricos.")
-        self.__dni = dni
+        # El DNI y el teléfono se guardan cifrados (RNF-01)
+        self.__dni = cifrar(dni)
         self.__nombres = nombres.strip()
         self.__apellidos = apellidos.strip()
         self.__fecha_nacimiento = fecha_nacimiento
-        self.__telefono = telefono
+        self.__telefono = cifrar(telefono)
         self.__historial = HistorialClinico()
 
     def obtener_nombre_completo(self):
         return f"{self.__nombres} {self.__apellidos}"
 
     def coincide_dni(self, dni):
-        return self.__dni == dni
+        return descifrar(self.__dni) == dni
 
     @property
     def dni_enmascarado(self):
-        return "****" + self.__dni[-4:]
+        return enmascarar_dni(descifrar(self.__dni))
 
     @property
     def apellidos(self):
